@@ -15,21 +15,25 @@ Ext.define('CustomApp', {
         this._dateString = Rally.util.DateTime.toIsoString(dayAgo, true);
         var boundGetSomeWorkItems = Ext.bind( this._getSomeWorkItems, this);
         var me = this;
-        async.map(['Defect','User Story'], boundGetSomeWorkItems, function(err, results){
-            var records = results[0].concat(results[1]);
-            me._prepareLineByLineGrid(records,[]);
+        
+        // The async map allows the the three stores to be populated concurrently, then call 
+        // _prepareLineByGrid for each store when it is done. Get's past the messy asynchronos structuring
+        async.map(['Defect','User Story', 'Test Case'], boundGetSomeWorkItems, function(err, results){
+            var records = results[0].concat(results[1]).concat(results[2]);
+            me._prepareLineByLineGrid(records);
         });
     },
-    
+
+    // This fn is called once for each type in the async map    
     _getSomeWorkItems: function(workItemType,callback) {
-        var lines = [];
         if (this.line_grid) {
             this.line_grid.destroy();
         }
-        console.log("getting "+ workItemType )
+        console.log("getting "+ workItemType );
         Ext.create('Rally.data.WsapiDataStore', {
             autoLoad: true,
             model: workItemType,
+            limit: 1000, // not handling fringe case where a work item could have more than 1000 revs in last 24
             filters : [
                 {
                     property: 'LastUpdateDate', 
@@ -46,7 +50,8 @@ Ext.define('CustomApp', {
         });
     },
     
-    _prepareLineByLineGrid: function(data, lines) {
+    _prepareLineByLineGrid: function(data) {
+        var lines = [];
         
         this._populateLineArray(data, lines);
         
@@ -71,13 +76,13 @@ Ext.define('CustomApp', {
             };
             
             Ext.Array.each(item.get('RevisionHistory').Revisions, function(rev) {
-                //console.log("create date: ", rev.CreationDate, "dateString: ", dateString);
+                // only one a single entry for all the descriptions so it fits in a single grid cell
                 if ( rev.CreationDate > this._dateString ) {
                     line.Description += rev.Description + "<BR>";
                     line.RevisionAuthor += rev.User._refObjectName + "<BR>";
                 }
             },
-            this ); // need to pass scope
+            this ); // need to pass scope when in an array
             lines.push(line);
         },
         this );
