@@ -11,18 +11,22 @@ Ext.define('CustomApp', {
     }],
     
     launch: function() {
-
         var dayAgo = Ext.Date.add(new Date(), Ext.Date.DAY, -1); // get stuff that changed within last 24 house
         this._dateString = Rally.util.DateTime.toIsoString(dayAgo, true);
-        //console.log("date string: ", dateString);
-        this._getSomeWorkItems("User Story");
+        var boundGetSomeWorkItems = Ext.bind( this._getSomeWorkItems, this);
+        var me = this;
+        async.map(['Defect','User Story'], boundGetSomeWorkItems, function(err, results){
+            var records = results[0].concat(results[1]);
+            me._prepareLineByLineGrid(records,[]);
+        });
     },
     
-    _getSomeWorkItems: function(workItemType) {
+    _getSomeWorkItems: function(workItemType,callback) {
         var lines = [];
         if (this.line_grid) {
             this.line_grid.destroy();
         }
+        console.log("getting "+ workItemType )
         Ext.create('Rally.data.WsapiDataStore', {
             autoLoad: true,
             model: workItemType,
@@ -35,7 +39,7 @@ Ext.define('CustomApp', {
             fetch: ['RevisionHistory', 'Revisions', 'FormattedID', 'Name', 'RevisionNumber', 'CreationDate', 'User', 'Description', 'LastUpdateDate'],
             listeners: {
                 load: function(store, data, success) {
-                    this._prepareLineByLineGrid(data, lines);
+                    callback(null, data); // invokes _prepareLineByLineGrid
                 },
                 scope: this
             }
@@ -67,7 +71,6 @@ Ext.define('CustomApp', {
             };
             
             Ext.Array.each(item.get('RevisionHistory').Revisions, function(rev) {
-                //debugger;
                 //console.log("create date: ", rev.CreationDate, "dateString: ", dateString);
                 if ( rev.CreationDate > this._dateString ) {
                     line.Description += rev.Description + "<BR>";
@@ -75,7 +78,6 @@ Ext.define('CustomApp', {
                 }
             },
             this ); // need to pass scope
-//debugger;
             lines.push(line);
         },
         this );
