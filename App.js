@@ -11,14 +11,15 @@ Ext.define('CustomApp', {
     }],
     
     launch: function() {
-        var lines = [];
+
         var dayAgo = Ext.Date.add(new Date(), Ext.Date.DAY, -1); // get stuff that changed within last 24 house
-        var dateString = Rally.util.DateTime.toIsoString(dayAgo, true);
+        this._dateString = Rally.util.DateTime.toIsoString(dayAgo, true);
         //console.log("date string: ", dateString);
-        this._getSomeStories(dateString, lines);
+        this._getSomeStories();
     },
     
-    _getSomeStories: function(dateString, lines) {
+    _getSomeStories: function() {
+        var lines = [];
         if (this.line_grid) {
             this.line_grid.destroy();
         }
@@ -29,21 +30,21 @@ Ext.define('CustomApp', {
                 {
                     property: 'LastUpdateDate', 
                     operator: '>', 
-                    value: dateString
+                    value: this._dateString
                 }],
             fetch: ['RevisionHistory', 'Revisions', 'FormattedID', 'Name', 'RevisionNumber', 'CreationDate', 'User', 'Description', 'LastUpdateDate'],
             listeners: {
                 load: function(store, data, success) {
-                    this._prepareLineByLineGrid(data, dateString, lines);
+                    this._prepareLineByLineGrid(data, lines);
                 },
                 scope: this
             }
         });
     },
     
-    _prepareLineByLineGrid: function(data, dateString, lines) {
+    _prepareLineByLineGrid: function(data, lines) {
         
-        this._populateLineArray(data, dateString, lines);
+        this._populateLineArray(data, lines);
         
         Ext.create('Rally.data.custom.Store', {
             autoLoad: true,
@@ -56,7 +57,7 @@ Ext.define('CustomApp', {
             }
         });
     },
-    _populateLineArray: function(data, dateString, lines) {
+    _populateLineArray: function(data, lines) {
         Ext.Array.each(data, function(item) {
             var line = {
                     FormattedID: item.get('FormattedID'),
@@ -68,14 +69,16 @@ Ext.define('CustomApp', {
             Ext.Array.each(item.get('RevisionHistory').Revisions, function(rev) {
                 //debugger;
                 //console.log("create date: ", rev.CreationDate, "dateString: ", dateString);
-                if ( rev.CreationDate > dateString ) {
+                if ( rev.CreationDate > this._dateString ) {
                     line.Description += rev.Description + "<BR>";
                     line.RevisionAuthor += rev.User._refObjectName + "<BR>";
                 }
-            });
-
+            },
+            this ); // need to pass scope
+//debugger;
             lines.push(line);
-        });
+        },
+        this );
     },
     
     _showLineByLineGrid: function(store) {

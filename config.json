@@ -4,6 +4,7 @@
    "server": "https://demo02.rallydev.com",
    "sdk": "2.0p5",
    "javascript": [
+      "//cdnjs.cloudflare.com/ajax/libs/async/1.22/async.min.js",
       "App.js"
    ],
    "css": [
