@@ -15,17 +15,17 @@ Ext.define('CustomApp', {
         var dayAgo = Ext.Date.add(new Date(), Ext.Date.DAY, -1); // get stuff that changed within last 24 house
         this._dateString = Rally.util.DateTime.toIsoString(dayAgo, true);
         //console.log("date string: ", dateString);
-        this._getSomeStories();
+        this._getSomeWorkItems("User Story");
     },
     
-    _getSomeStories: function() {
+    _getSomeWorkItems: function(workItemType) {
         var lines = [];
         if (this.line_grid) {
             this.line_grid.destroy();
         }
         Ext.create('Rally.data.WsapiDataStore', {
             autoLoad: true,
-            model: 'User Story',
+            model: workItemType,
             filters : [
                 {
                     property: 'LastUpdateDate', 
