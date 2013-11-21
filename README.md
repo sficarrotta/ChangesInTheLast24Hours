@@ -3,6 +3,9 @@ hackApp
 
 ## Overview
 
+To do: Add checkboxes for the three work item types, then only display results for the
+types selected
+
 
 ## License
 

@@ -40,7 +40,7 @@ Ext.define('CustomApp', {
                     operator: '>', 
                     value: this._dateString
                 }],
-            fetch: ['RevisionHistory', 'Revisions', 'FormattedID', 'Name', 'RevisionNumber', 'CreationDate', 'User', 'Description', 'LastUpdateDate'],
+            fetch: ['RevisionHistory', 'ObjectID', 'Revisions', 'FormattedID', 'Name', 'RevisionNumber', 'CreationDate', 'User', 'Description', 'LastUpdateDate'],
             listeners: {
                 load: function(store, data, success) {
                     callback(null, data); // invokes _prepareLineByLineGrid
@@ -66,6 +66,7 @@ Ext.define('CustomApp', {
             }
         });
     },
+    
     _populateLineArray: function(data, lines) {
         Ext.Array.each(data, function(item) {
             var line = {
@@ -74,7 +75,6 @@ Ext.define('CustomApp', {
                     Description: "",
                     RevisionAuthor: ""
             };
-            
             Ext.Array.each(item.get('RevisionHistory').Revisions, function(rev) {
                 // only one a single entry for all the descriptions so it fits in a single grid cell
                 if ( rev.CreationDate > this._dateString ) {
@@ -83,7 +83,9 @@ Ext.define('CustomApp', {
                 }
             },
             this ); // need to pass scope when in an array
-            lines.push(line);
+            item.set("RevisionDescription",line.Description);
+            item.set("RevisionAuthor",line.RevisionAuthor);
+            lines.push(item);
         },
         this );
     },
@@ -98,6 +100,7 @@ Ext.define('CustomApp', {
                 text: 'ID',
                 dataIndex: 'FormattedID',
                 xtype: 'templatecolumn',
+                // tpl:""
                 tpl: Ext.create('Rally.ui.renderer.template.FormattedIDTemplate') // make the ID a live link
             }, {
                 text: 'Name',
@@ -108,7 +111,7 @@ Ext.define('CustomApp', {
                 dataIndex: 'RevisionAuthor'
             }, {
                 text: 'description',
-                dataIndex: 'Description',
+                dataIndex: 'RevisionDescription',
                 flex: 2
             }]
         });
