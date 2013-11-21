@@ -11,13 +11,14 @@ Ext.define('CustomApp', {
     }],
     
     launch: function() {
+        var lines = [];
         var dayAgo = Ext.Date.add(new Date(), Ext.Date.DAY, -1); // get stuff that changed within last 24 house
         var dateString = Rally.util.DateTime.toIsoString(dayAgo, true);
-        console.log("date string: ", dateString);
-        this._getSomeStories(dateString);
+        //console.log("date string: ", dateString);
+        this._getSomeStories(dateString, lines);
     },
     
-    _getSomeStories: function(dateString) {
+    _getSomeStories: function(dateString, lines) {
         if (this.line_grid) {
             this.line_grid.destroy();
         }
@@ -33,36 +34,16 @@ Ext.define('CustomApp', {
             fetch: ['RevisionHistory', 'Revisions', 'FormattedID', 'Name', 'RevisionNumber', 'CreationDate', 'User', 'Description', 'LastUpdateDate'],
             listeners: {
                 load: function(store, data, success) {
-                    this._prepareLineByLineGrid(data, dateString);
+                    this._prepareLineByLineGrid(data, dateString, lines);
                 },
                 scope: this
             }
         });
     },
     
-    _prepareLineByLineGrid: function(data, dateString) {
-        var lines = [];
-
-        Ext.Array.each(data, function(item) {
-            var line = {
-                    FormattedID: item.get('FormattedID'),
-                    Name: item.get('Name'),
-                    Description: "",
-                    RevisionAuthor: ""
-                };
-            
-            Ext.Array.each(item.get('RevisionHistory').Revisions, function(rev) {
-                //debugger;
-                console.log("create date: ", rev.CreationDate, "dateString: ", dateString);
-                if ( rev.CreationDate > dateString ) {
-                    line.Description += rev.Description + "<BR>";
-                    line.RevisionAuthor += rev.User._refObjectName + "<BR>";
-                }
-            });
-
-            lines.push(line);
-
-        });
+    _prepareLineByLineGrid: function(data, dateString, lines) {
+        
+        this._populateLineArray(data, dateString, lines);
         
         Ext.create('Rally.data.custom.Store', {
             autoLoad: true,
@@ -73,6 +54,27 @@ Ext.define('CustomApp', {
                 },
                 scope: this
             }
+        });
+    },
+    _populateLineArray: function(data, dateString, lines) {
+        Ext.Array.each(data, function(item) {
+            var line = {
+                    FormattedID: item.get('FormattedID'),
+                    Name: item.get('Name'),
+                    Description: "",
+                    RevisionAuthor: ""
+            };
+            
+            Ext.Array.each(item.get('RevisionHistory').Revisions, function(rev) {
+                //debugger;
+                //console.log("create date: ", rev.CreationDate, "dateString: ", dateString);
+                if ( rev.CreationDate > dateString ) {
+                    line.Description += rev.Description + "<BR>";
+                    line.RevisionAuthor += rev.User._refObjectName + "<BR>";
+                }
+            });
+
+            lines.push(line);
         });
     },
     
