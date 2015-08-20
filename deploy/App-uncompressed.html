@@ -26,16 +26,17 @@ Ext.define('CustomApp', {
         var boundGetSomeWorkItems = Ext.bind( this._getSomeWorkItems, this);
         var me = this;
         
-        // The async map allows the the three stores to be populated concurrently, then call 
+        // The async map allows the the stores to be populated concurrently, then call 
         // _prepareLineByGrid for each store when it is done. Get's past the messy asynchronos structuring
-        async.map(['Defect','User Story', 'Test Case'], boundGetSomeWorkItems, function(err, results){
-            var records = results[0].concat(results[1]).concat(results[2]);
+        async.map(['Defect','User Story', 'Test Case', 'Task'], boundGetSomeWorkItems, function(err, results){
+            var records = results[0].concat(results[1]).concat(results[2]).concat(results[3]);
             me._prepareLineByLineGrid(records);
         });
     },
 
     // This fn is called once for each type in the async map    
     _getSomeWorkItems: function(workItemType,callback) {
+        //console.log("WorkItemType", workItemType);
         if (this.line_grid) {
             this.line_grid.destroy();
         }
@@ -138,12 +139,14 @@ Ext.define('CustomApp', {
     </script>
 
 
+
     <style type="text/css">
         .app {
-     /* Add app styles here */
+  /* Add app styles here */
 }
 
     </style>
 </head>
-<body></body>
+<body>
+</body>
 </html>
